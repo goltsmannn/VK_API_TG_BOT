@@ -2,6 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 import config
+import vk
 
 
 logging.basicConfig(
@@ -10,26 +11,22 @@ logging.basicConfig(
 )
 
 
-async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
 
 
-async def caps_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=' '.join(context.args).upper())
+async def parse_public(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    response = vk.parse_public_by_query(context.args)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=' '.join(response))
+
 
 if __name__ == '__main__':
-    application = ApplicationBuilder().token(config.TOKEN).build()
+    application = ApplicationBuilder().token(config.TG_BOT_TOKEN).build()
 
     start_handler = CommandHandler('start', start)
-    echo_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), echo_message)
-    caps_handler = CommandHandler('caps', caps_message)
+    parse_handler = CommandHandler('parse', parse_public)
 
     application.add_handler(start_handler)
-    application.add_handler(echo_handler)
-    application.add_handler(caps_handler)
+    application.add_handler(parse_handler)
 
     application.run_polling()
